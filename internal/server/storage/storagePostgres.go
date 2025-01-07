@@ -26,8 +26,8 @@ func NewStorage(dsn string) (*Storage, error) {
 	}
 
 	return &Storage{
-		UserRepository: repository.NewUserRepository(db),
-		SecretRepo:     repository.NewSecretRepository(db),
+		UserRepository:   repository.NewUserRepository(db),
+		SecretRepository: repository.NewSecretRepository(db),
 	}, nil
 }
 
