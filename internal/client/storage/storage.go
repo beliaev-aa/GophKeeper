@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 // Storage описывает интерфейс для базовых операций с хранилищем секретов.
@@ -19,6 +18,7 @@ type Storage interface {
 	Create(ctx context.Context, secret *models.Secret) error
 	Update(ctx context.Context, secret *models.Secret) error
 	Delete(ctx context.Context, id uint64) error
+	String() string
 }
 
 // RemoteStorage реализует хранилище секретов, используя удаленный сервис через gRPC.
@@ -29,7 +29,7 @@ type RemoteStorage struct {
 
 // NewRemoteStorage создает новый экземпляр RemoteStorage с предварительно вычисленным ключом шифрования.
 func NewRemoteStorage(client *grpc.ClientGRPC) (*RemoteStorage, error) {
-	deriveKey, err := crypto.DeriveKey(client.GetPassword(), strconv.FormatUint(client.GetClientID(), 10))
+	deriveKey, err := crypto.DeriveKey(client.GetPassword(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -97,6 +97,10 @@ func (store *RemoteStorage) Update(_ context.Context, secret *models.Secret) (er
 func (store *RemoteStorage) Delete(_ context.Context, id uint64) (err error) {
 	err = store.client.DeleteSecret(context.Background(), id)
 	return err
+}
+
+func (store *RemoteStorage) String() string {
+	return "remote storage"
 }
 
 // encryptPayload шифрует данные секрета перед сохранением.

@@ -14,13 +14,13 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/charmbracelet/bubbletea"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 	"math"
 	"math/rand/v2"
 	"sync"
@@ -205,7 +205,6 @@ func parseError(err error) error {
 
 	switch st.Code() {
 	case codes.Unavailable:
-		log.Println(err)
 		return errors.New("server unavailable")
 	case codes.Unauthenticated:
 		return errors.New("failed to authenticate")
@@ -249,4 +248,41 @@ func loadTLSConfig(caCertFile, clientCertFile, clientKeyFile string) (credential
 	}
 
 	return credentials.NewTLS(tlcConfiguration), nil
+}
+
+// Notifications подписывается на уведомления сервера и обновляет UI при получении новых данных.
+func (c *ClientGRPC) Notifications(p *tea.Program) {
+	var (
+		stream proto.Notification_SubscribeClient
+		err    error
+	)
+
+	for {
+		if stream == nil {
+			if stream, err = c.subscribe(); err != nil {
+				time.Sleep(time.Second * 2)
+				continue
+			}
+		}
+
+		_, err = stream.Recv()
+		if err != nil {
+			stream = nil
+			time.Sleep(time.Second * 2)
+			continue
+		}
+
+		if p != nil {
+			p.Send(ReloadSecretList{})
+		}
+	}
+}
+
+type ReloadSecretList struct{}
+
+// Инициирует подписку на серверные уведомления, используя ID клиента.
+func (c *ClientGRPC) subscribe() (proto.Notification_SubscribeClient, error) {
+	return c.notifyClient.Subscribe(context.Background(), &proto.SubscribeRequest{
+		Id: c.clientID,
+	})
 }
