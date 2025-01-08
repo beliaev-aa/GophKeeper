@@ -1,202 +1,172 @@
-// Package storage предоставляет реализацию хранилища данных с использованием SQLite.
-// Хранилище позволяет выполнять CRUD-операции над данными, описанными в пакете models.
+// Package storage предоставляет интерфейсы и реализации для управления хранилищем секретов.
+// Этот пакет включает функционал для удаленного хранения данных с использованием gRPC и шифрование данных перед сохранением.
 package storage
 
 import (
-	gophKeeperErrors "beliaev-aa/GophKeeper/pkg/errors"
+	"beliaev-aa/GophKeeper/internal/client/crypto"
+	"beliaev-aa/GophKeeper/internal/client/grpc"
 	"beliaev-aa/GophKeeper/pkg/models"
-	"beliaev-aa/GophKeeper/pkg/storage"
-	"database/sql"
+	"context"
 	"encoding/json"
-	"errors"
-	_ "github.com/mattn/go-sqlite3"
+	"fmt"
+	"strconv"
 )
 
-// SQLiteStorage предоставляет реализацию интерфейса хранилища данных с использованием SQLite.
-type SQLiteStorage struct {
-	db *sql.DB // Соединение с базой данных.
+// Storage описывает интерфейс для базовых операций с хранилищем секретов.
+type Storage interface {
+	Get(ctx context.Context, id uint64) (*models.Secret, error)
+	GetAll(ctx context.Context) ([]*models.Secret, error)
+	Create(ctx context.Context, secret *models.Secret) error
+	Update(ctx context.Context, secret *models.Secret) error
+	Delete(ctx context.Context, id uint64) error
 }
 
-// NewSQLiteStorage создаёт новый экземпляр SQLiteStorage.
-//
-// Параметры:
-//   - dbPath: путь к файлу базы данных SQLite.
-//
-// Возвращает:
-//   - указатель на созданный SQLiteStorage;
-//   - ошибку, если инициализация не удалась.
-func NewSQLiteStorage(dbPath string) (storage.Storage, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+// RemoteStorage реализует хранилище секретов, используя удаленный сервис через gRPC.
+type RemoteStorage struct {
+	client    *grpc.ClientGRPC
+	deriveKey []byte
+}
+
+// NewRemoteStorage создает новый экземпляр RemoteStorage с предварительно вычисленным ключом шифрования.
+func NewRemoteStorage(client *grpc.ClientGRPC) (*RemoteStorage, error) {
+	deriveKey, err := crypto.DeriveKey(client.GetPassword(), strconv.FormatUint(client.GetClientID(), 10))
+	if err != nil {
+		return nil, err
+	}
+	return &RemoteStorage{
+		client:    client,
+		deriveKey: deriveKey,
+	}, nil
+}
+
+// Get извлекает секрет по его идентификатору, расшифровывает его и возвращает.
+func (store *RemoteStorage) Get(_ context.Context, id uint64) (*models.Secret, error) {
+	secret, err := store.client.LoadSecret(context.Background(), id)
 	if err != nil {
 		return nil, err
 	}
 
-	store := &SQLiteStorage{db: db}
-	if err = store.initSchema(); err != nil {
+	err = store.decryptPayload(secret)
+	if err != nil {
 		return nil, err
 	}
 
-	return store, nil
+	return secret, nil
 }
 
-// initSchema инициализирует схему таблицы для хранения данных в базе данных.
-//
-// Возвращает:
-//   - ошибку, если создание таблицы не удалось.
-func (s *SQLiteStorage) initSchema() error {
-	query := `
-    CREATE TABLE IF NOT EXISTS stored_data (
-        id TEXT PRIMARY KEY,
-        type TEXT NOT NULL,
-        description TEXT,
-        meta_info TEXT,
-        content TEXT,
-        updated_at INTEGER
-    );
-    `
-	_, err := s.db.Exec(query)
+// GetAll извлекает все секреты пользователя, расшифровывает их и возвращает.
+func (store *RemoteStorage) GetAll(_ context.Context) ([]*models.Secret, error) {
+	secrets, err := store.client.LoadSecrets(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, s := range secrets {
+		err = store.decryptPayload(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return secrets, nil
+}
+
+// Create создает новый секрет в хранилище, предварительно зашифровав его.
+func (store *RemoteStorage) Create(_ context.Context, secret *models.Secret) (err error) {
+	err = store.encryptPayload(secret)
+	if err != nil {
+		return
+	}
+
+	err = store.client.SaveSecret(context.Background(), secret)
 	return err
 }
 
-// Create добавляет новую запись в хранилище.
-//
-// Параметры:
-//   - data: указатель на структуру models. StoredData, содержащую данные для сохранения.
-//
-// Возвращает:
-//   - ошибку, если операция не удалась.
-func (s *SQLiteStorage) Create(data *models.StoredData) error {
-	metaInfo, err := json.Marshal(data.MetaInfo)
+// Update обновляет существующий секрет, предварительно зашифровав его.
+func (store *RemoteStorage) Update(_ context.Context, secret *models.Secret) (err error) {
+	err = store.encryptPayload(secret)
 	if err != nil {
-		return err
+		return
 	}
 
-	content, err := json.Marshal(data.Content)
-	if err != nil {
-		return err
-	}
-
-	query := `
-    INSERT INTO stored_data (id, type, description, meta_info, content, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-    `
-	_, err = s.db.Exec(query, data.ID, data.Type, data.Description, string(metaInfo), string(content), data.UpdatedAt)
+	err = store.client.SaveSecret(context.Background(), secret)
 	return err
 }
 
-// Read возвращает запись из хранилища по её уникальному идентификатору.
-//
-// Параметры:
-//   - id: уникальный идентификатор записи.
-//
-// Возвращает:
-//   - указатель на models. StoredData с данными записи;
-//   - nil, если запись не найдена;
-//   - ошибку, если операция не удалась.
-func (s *SQLiteStorage) Read(id string) (*models.StoredData, error) {
-	query := `SELECT id, type, description, meta_info, content, updated_at FROM stored_data WHERE id = ?`
-	row := s.db.QueryRow(query, id)
+// Delete удаляет секрет по его идентификатору.
+func (store *RemoteStorage) Delete(_ context.Context, id uint64) (err error) {
+	err = store.client.DeleteSecret(context.Background(), id)
+	return err
+}
 
+// encryptPayload шифрует данные секрета перед сохранением.
+func (store *RemoteStorage) encryptPayload(secret *models.Secret) (err error) {
+	data, err := marshalSecret(secret)
+	if err != nil {
+		return fmt.Errorf("encryptPayload(): error serializing data: %w", err)
+	}
+
+	encryptedData, err := crypto.Encrypt(string(data), store.deriveKey)
+	if err != nil {
+		return fmt.Errorf("encryptPayload(): error encrypting Data: %w", err)
+	} else {
+		secret.Payload = []byte(encryptedData)
+	}
+
+	return err
+}
+
+// decryptPayload расшифровывает данные секрета после извлечения.
+func (store *RemoteStorage) decryptPayload(secret *models.Secret) (err error) {
+	decryptedData, err := crypto.Decrypt(string(secret.Payload), store.deriveKey)
+	if err != nil {
+		return fmt.Errorf("decryptPayload: failed to decrypt data: %w", err)
+
+	}
+
+	err = unmarshalSecret(secret, []byte(decryptedData))
+	if err != nil {
+		return fmt.Errorf("decryptPayload: failed to unmarshal data: %w", err)
+	}
+
+	return nil
+}
+
+// marshalSecret кодирует данные секрета в JSON.
+func marshalSecret(secret *models.Secret) ([]byte, error) {
 	var (
-		storedData models.StoredData
-		metaInfo   string
-		content    string
+		data []byte
+		err  error
 	)
 
-	if err := row.Scan(&storedData.ID, &storedData.Type, &storedData.Description, &metaInfo, &content, &storedData.UpdatedAt); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, gophKeeperErrors.ErrNotFound
-		}
-		return nil, err
+	switch models.SecretType(secret.SecretType) {
+	case models.CredSecret:
+		data, err = json.Marshal(secret.Creds)
+	case models.TextSecret:
+		data, err = json.Marshal(secret.Text)
+	case models.CardSecret:
+		data, err = json.Marshal(secret.Card)
+	case models.BlobSecret:
+		data, err = json.Marshal(secret.Blob)
 	}
 
-	if err := json.Unmarshal([]byte(metaInfo), &storedData.MetaInfo); err != nil {
-		return nil, err
-	}
-
-	if err := json.Unmarshal([]byte(content), &storedData.Content); err != nil {
-		return nil, err
-	}
-
-	return &storedData, nil
+	return data, err
 }
 
-// Update обновляет существующую запись в хранилище.
-//
-// Параметры:
-//   - id: уникальный идентификатор записи;
-//   - data: указатель на структуру models. StoredData с обновлёнными данными.
-//
-// Возвращает:
-//   - ошибку, если операция не удалась.
-func (s *SQLiteStorage) Update(id string, data *models.StoredData) error {
-	metaInfo, err := json.Marshal(data.MetaInfo)
-	if err != nil {
-		return err
+// unmarshalSecret кодирует данные секрета из JSON.
+func unmarshalSecret(secret *models.Secret, data []byte) error {
+	var err error
+
+	switch models.SecretType(secret.SecretType) {
+	case models.CredSecret:
+		err = json.Unmarshal(data, &secret.Creds)
+	case models.TextSecret:
+		err = json.Unmarshal(data, &secret.Text)
+	case models.CardSecret:
+		err = json.Unmarshal(data, &secret.Card)
+	case models.BlobSecret:
+		err = json.Unmarshal(data, &secret.Blob)
 	}
 
-	content, err := json.Marshal(data.Content)
-	if err != nil {
-		return err
-	}
-
-	query := `
-    UPDATE stored_data
-    SET type = ?, description = ?, meta_info = ?, content = ?, updated_at = ?
-    WHERE id = ?
-    `
-	_, err = s.db.Exec(query, data.Type, data.Description, string(metaInfo), string(content), data.UpdatedAt, id)
 	return err
-}
-
-// Delete удаляет запись из хранилища по её уникальному идентификатору.
-//
-// Параметры:
-//   - id: уникальный идентификатор записи.
-//
-// Возвращает:
-//   - ошибку, если операция не удалась.
-func (s *SQLiteStorage) Delete(id string) error {
-	query := `DELETE FROM stored_data WHERE id = ?`
-	_, err := s.db.Exec(query, id)
-	return err
-}
-
-// List возвращает список всех записей из хранилища.
-//
-// Возвращает:
-//   - массив указателей на структуры models. StoredData с данными записей;
-//   - ошибку, если операция не удалась.
-func (s *SQLiteStorage) List() ([]*models.StoredData, error) {
-	query := `SELECT id, type, description, meta_info, content, updated_at FROM stored_data`
-	rows, err := s.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var dataList []*models.StoredData
-	for rows.Next() {
-		var (
-			storedData models.StoredData
-			metaInfo   string
-			content    string
-		)
-
-		if err = rows.Scan(&storedData.ID, &storedData.Type, &storedData.Description, &metaInfo, &content, &storedData.UpdatedAt); err != nil {
-			return nil, err
-		}
-
-		if err = json.Unmarshal([]byte(metaInfo), &storedData.MetaInfo); err != nil {
-			return nil, err
-		}
-
-		if err = json.Unmarshal([]byte(content), &storedData.Content); err != nil {
-			return nil, err
-		}
-
-		dataList = append(dataList, &storedData)
-	}
-
-	return dataList, nil
 }
