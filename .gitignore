@@ -28,3 +28,7 @@ go.work.sum
 .idea
 /cover
 *.db
+
+# Certs
+certs/*.pem
+certs/*.srl

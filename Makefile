@@ -1,7 +1,7 @@
-.PHONY: test coverage coverage-html proto
+.PHONY: test coverage coverage-html proto certs server
 
 PROTO_SRC = proto
-PROTO_FILES = secrets users
+PROTO_FILES = notification secrets users
 PROTO_DST = pkg/$(PROTO_SRC)
 
 test:
@@ -26,3 +26,11 @@ $(PROTO_DST)/%:
 		--go-grpc_out=$(PROTO_DST) \
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_SRC)/$(notdir $@).proto
+
+certs:
+	cd certs && ./generate.sh > /dev/null
+.PHONY: certs
+
+server:
+	go build -o builds/$@ cmd/$@/*.go
+.PHONY: server
