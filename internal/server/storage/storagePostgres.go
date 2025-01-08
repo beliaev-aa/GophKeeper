@@ -1,3 +1,4 @@
+// Package storage обеспечивает хранение и доступ к репозиториям данных хранящихся в PostgreSQL.
 package storage
 
 import (
@@ -5,6 +6,7 @@ import (
 	"beliaev-aa/GophKeeper/internal/server/storage/repository"
 	"context"
 	"fmt"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/pressly/goose/v3"
 	"time"
