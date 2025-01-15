@@ -44,7 +44,7 @@ var (
 // Model структура, представляющая модель данных для главного интерфейса пользователя.
 type Model struct {
 	*tui.PaneManager
-	client                    *grpc.ClientGRPC
+	client                    grpc.ClientGRPCInterface
 	config                    *config.Config
 	err                       error
 	height                    int
@@ -58,7 +58,7 @@ type Model struct {
 }
 
 // NewModel создает и инициализирует новую модель интерфейса пользователя.
-func NewModel(config *config.Config, client *grpc.ClientGRPC) (*Model, error) {
+func NewModel(config *config.Config, client grpc.ClientGRPCInterface) (*Model, error) {
 	makers := prepareMakers(client)
 
 	m := Model{
@@ -74,7 +74,7 @@ func NewModel(config *config.Config, client *grpc.ClientGRPC) (*Model, error) {
 }
 
 // Init инициализирует состояние модели и запускает начальные команды для настройки интерфейса.
-func (m Model) Init() tea.Cmd {
+func (m *Model) Init() tea.Cmd {
 	return m.PaneManager.Init()
 }
 
@@ -158,7 +158,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View генерирует текстовое представление интерфейса пользователя для отображения в терминале.
-func (m Model) View() string {
+func (m *Model) View() string {
 	var components []string
 
 	if m.mode == promptMode {
@@ -206,11 +206,11 @@ func (m Model) View() string {
 	return strings.Join(components, "\n")
 }
 
-func (m Model) availableFooterMsgWidth() int {
+func (m *Model) availableFooterMsgWidth() int {
 	return max(0, m.width-lipgloss.Width(m.helpWidget)-lipgloss.Width(m.versionWidget))
 }
 
-func (m Model) viewHeight() int {
+func (m *Model) viewHeight() int {
 	vh := m.height - FooterHeight
 	if m.mode == promptMode {
 		vh -= PromptHeight
@@ -222,11 +222,11 @@ func (m Model) viewHeight() int {
 	return vh
 }
 
-func (m Model) viewWidth() int {
+func (m *Model) viewWidth() int {
 	return max(MinContentWidth, m.width)
 }
 
-func (m Model) help() string {
+func (m *Model) help() string {
 	bindings := []key.Binding{tui.GlobalKeys.Help, tui.GlobalKeys.Quit}
 
 	switch m.mode {

@@ -28,6 +28,20 @@ import (
 	"time"
 )
 
+type ClientGRPCInterface interface {
+	Login(ctx context.Context, login, password string) (string, error)
+	Register(ctx context.Context, login, password string) (string, error)
+	LoadSecrets(ctx context.Context) ([]*models.Secret, error)
+	LoadSecret(ctx context.Context, ID uint64) (*models.Secret, error)
+	SaveSecret(ctx context.Context, secret *models.Secret) error
+	DeleteSecret(ctx context.Context, id uint64) error
+	SetToken(token string)
+	GetToken() string
+	SetPassword(password string)
+	GetPassword() string
+	Notifications(p *tea.Program, logger *zap.Logger)
+}
+
 type (
 	// ClientGRPC управляет соединением с gRPC сервером и реализует методы для работы с серверными ресурсами.
 	ClientGRPC struct {
@@ -45,7 +59,7 @@ type (
 )
 
 // NewClientGRPC создаёт новый экземпляр ClientGRPC с предварительной настройкой подключения к серверу.
-func NewClientGRPC(cfg *config.Config) (*ClientGRPC, error) {
+func NewClientGRPC(cfg *config.Config) (ClientGRPCInterface, error) {
 	var opts []grpc.DialOption
 
 	newClient := ClientGRPC{

@@ -14,7 +14,7 @@ type NavigationCallback func(args ...any) tea.Cmd
 // NavigationMsg представляет сообщение, используемое для навигации и конфигурации экранов в TUI.
 type NavigationMsg struct {
 	Callback     NavigationCallback
-	Client       *grpc.ClientGRPC
+	Client       grpc.ClientGRPCInterface
 	DisableFocus bool
 	Page         Page
 	Position     Position
@@ -43,7 +43,7 @@ func WithCallback(c NavigationCallback) NavigateOption {
 }
 
 // WithClient определяет опцию навигации для установки клиента gRPC.
-func WithClient(c *grpc.ClientGRPC) NavigateOption {
+func WithClient(c grpc.ClientGRPCInterface) NavigateOption {
 	return func(msg *NavigationMsg) {
 		msg.Client = c
 	}

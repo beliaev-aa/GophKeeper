@@ -23,12 +23,12 @@ type Storage interface {
 
 // RemoteStorage реализует хранилище секретов, используя удаленный сервис через gRPC.
 type RemoteStorage struct {
-	client    *grpc.ClientGRPC
+	client    grpc.ClientGRPCInterface
 	deriveKey []byte
 }
 
 // NewRemoteStorage создает новый экземпляр RemoteStorage с предварительно вычисленным ключом шифрования.
-func NewRemoteStorage(client *grpc.ClientGRPC) (*RemoteStorage, error) {
+func NewRemoteStorage(client grpc.ClientGRPCInterface) (*RemoteStorage, error) {
 	deriveKey, err := crypto.DeriveKey(client.GetPassword(), "")
 	if err != nil {
 		return nil, err

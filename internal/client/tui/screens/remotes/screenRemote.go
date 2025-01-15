@@ -10,12 +10,12 @@ import (
 
 // RemoteOpenScreen представляет экран для открытия удаленного хранилища.
 type RemoteOpenScreen struct {
-	client *grpc.ClientGRPC
+	client grpc.ClientGRPCInterface
 }
 
 // RemoteOpenScreenMaker структура для создания экрана RemoteOpenScreen.
 type RemoteOpenScreenMaker struct {
-	Client *grpc.ClientGRPC
+	Client grpc.ClientGRPCInterface
 }
 
 // Make создает новый экран RemoteOpenScreen.
@@ -29,7 +29,7 @@ func (s *RemoteOpenScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, e
 }
 
 // NewRemoteOpenScreen создает и инициализирует новый экран удаленного открытия.
-func NewRemoteOpenScreen(client *grpc.ClientGRPC) *RemoteOpenScreen {
+func NewRemoteOpenScreen(client grpc.ClientGRPCInterface) *RemoteOpenScreen {
 	return &RemoteOpenScreen{
 		client: client,
 	}

@@ -29,7 +29,7 @@ const (
 
 // AuthenticateScreen структура для экрана входа и регистрации.
 type AuthenticateScreen struct {
-	client     *grpc.ClientGRPC
+	client     grpc.ClientGRPCInterface
 	inputGroup components.InputGroup
 }
 
@@ -46,7 +46,7 @@ func (s *AuthenticateScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike,
 }
 
 // NewLoginScreen инициализирует и возвращает новый экран входа/регистрации.
-func NewLoginScreen(client *grpc.ClientGRPC) *AuthenticateScreen {
+func NewLoginScreen(client grpc.ClientGRPCInterface) *AuthenticateScreen {
 	m := AuthenticateScreen{
 		client: client,
 	}

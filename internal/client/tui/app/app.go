@@ -16,7 +16,7 @@ import (
 
 // TuiApplication структура, представляющая приложение с текстовым интерфейсом.
 type TuiApplication struct {
-	client   *grpc.ClientGRPC
+	client   grpc.ClientGRPCInterface
 	config   *config.Config
 	logger   *zap.Logger
 	notify   chan error
@@ -26,7 +26,7 @@ type TuiApplication struct {
 
 // NewTuiApplication создаёт новый экземпляр TuiApplication с заданной конфигурацией и логгером.
 // Эта функция также инициализирует модель интерфейса, обрабатывает ошибки инициализации.
-func NewTuiApplication(grpcClient *grpc.ClientGRPC, config *config.Config, logger *zap.Logger) *TuiApplication {
+func NewTuiApplication(grpcClient grpc.ClientGRPCInterface, config *config.Config, logger *zap.Logger) *TuiApplication {
 	model, err := top.NewModel(config, grpcClient)
 	if err != nil {
 		logger.Fatal("Error initializing model", zap.Error(err))

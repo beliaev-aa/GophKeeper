@@ -14,8 +14,7 @@ import (
 	"beliaev-aa/GophKeeper/internal/client/tui/screens/texts"
 )
 
-func prepareMakers(client *grpc.ClientGRPC) map[tui.Screen]tui.ScreenMaker {
-
+func prepareMakers(client grpc.ClientGRPCInterface) map[tui.Screen]tui.ScreenMaker {
 	return map[tui.Screen]tui.ScreenMaker{
 		tui.BlobEditScreen:       &blobs.BlobEditScreen{},
 		tui.CardEditScreen:       &cards.CardEditScreen{},
