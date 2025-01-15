@@ -53,3 +53,11 @@ func NewLogger() *zap.Logger {
 
 	return logger
 }
+
+// AddLoggerFields демонстрация добавления дополнительных полей в логгер приложения.
+func AddLoggerFields(logger *zap.Logger, appName string) *zap.Logger {
+	fields := []zapcore.Field{
+		zap.String("appName", appName),
+	}
+	return logger.With(fields...)
+}

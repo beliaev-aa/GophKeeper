@@ -10,6 +10,7 @@ import (
 
 func main() {
 	logger := utils.NewLogger()
+	utils.AddLoggerFields(logger, "GophKeeper Server")
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		logger.Fatal("Error loading config", zap.Error(err))
