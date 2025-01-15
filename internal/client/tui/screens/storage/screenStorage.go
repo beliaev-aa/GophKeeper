@@ -35,7 +35,7 @@ type BrowseStorageScreen struct {
 }
 
 // Make создает экран для просмотра хранилища.
-func (s BrowseStorageScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *BrowseStorageScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewStorageBrowseScreenScreen(msg.Storage), nil
 }
 
@@ -52,7 +52,7 @@ func NewStorageBrowseScreenScreen(storage storage.Storage) *BrowseStorageScreen 
 }
 
 // Init инициализирует экран и обновляет строки таблицы.
-func (s BrowseStorageScreen) Init() tea.Cmd {
+func (s *BrowseStorageScreen) Init() tea.Cmd {
 	s.updateRows()
 	return nil
 }
@@ -102,7 +102,7 @@ func (s *BrowseStorageScreen) Update(msg tea.Msg) tea.Cmd {
 }
 
 // View отображает текущий экран.
-func (s BrowseStorageScreen) View() string {
+func (s *BrowseStorageScreen) View() string {
 	var b strings.Builder
 
 	b.WriteString(fmt.Sprintf("Operating storage %s\n", styles.Highlighted.Render(s.storage.String())))
@@ -141,7 +141,7 @@ func (s *BrowseStorageScreen) updateRows() {
 	s.table.SetRows(rows)
 }
 
-func (s BrowseStorageScreen) handleEdit() tea.Cmd {
+func (s *BrowseStorageScreen) handleEdit() tea.Cmd {
 	secret, err := s.getSelectedSecret()
 	if err != nil {
 		return errCmd("failed to load secret: %w", err)
@@ -155,7 +155,7 @@ func (s BrowseStorageScreen) handleEdit() tea.Cmd {
 	return tui.SetBodyPane(screen, tui.WithSecret(secret), tui.WithStorage(s.storage))
 }
 
-func (s BrowseStorageScreen) handleCopy() tea.Cmd {
+func (s *BrowseStorageScreen) handleCopy() tea.Cmd {
 	secret, err := s.getSelectedSecret()
 	if err != nil {
 		return errCmd("failed to load secret: %w", err)
@@ -172,7 +172,7 @@ func (s BrowseStorageScreen) handleCopy() tea.Cmd {
 	return infoCmd("secret copied successfully")
 }
 
-func (s BrowseStorageScreen) handleDelete() tea.Cmd {
+func (s *BrowseStorageScreen) handleDelete() tea.Cmd {
 	secret, err := s.getSelectedSecret()
 	if err != nil {
 		return errCmd("failed to load secret", err)
@@ -194,7 +194,7 @@ func infoCmd(msg string) tea.Cmd {
 	return tui.ReportInfo("%s", msg)
 }
 
-func (s BrowseStorageScreen) getSelectedSecret() (secret *models.Secret, err error) {
+func (s *BrowseStorageScreen) getSelectedSecret() (secret *models.Secret, err error) {
 	row := s.table.SelectedRow()
 
 	secret, err = s.loadSecret(row[0])
@@ -205,7 +205,7 @@ func (s BrowseStorageScreen) getSelectedSecret() (secret *models.Secret, err err
 	return secret, err
 }
 
-func (s BrowseStorageScreen) loadSecret(rawID string) (*models.Secret, error) {
+func (s *BrowseStorageScreen) loadSecret(rawID string) (*models.Secret, error) {
 	var err error
 
 	id, err := strconv.ParseUint(rawID, 10, 64)
@@ -221,7 +221,7 @@ func (s BrowseStorageScreen) loadSecret(rawID string) (*models.Secret, error) {
 	return sec, err
 }
 
-func (s BrowseStorageScreen) getScreenForSecret(secret *models.Secret) (tui.Screen, error) {
+func (s *BrowseStorageScreen) getScreenForSecret(secret *models.Secret) (tui.Screen, error) {
 	switch secret.SecretType {
 	case string(models.CredSecret):
 		return tui.CredentialEditScreen, nil
@@ -236,7 +236,7 @@ func (s BrowseStorageScreen) getScreenForSecret(secret *models.Secret) (tui.Scre
 	}
 }
 
-func (s BrowseStorageScreen) colsWidth() int {
+func (s *BrowseStorageScreen) colsWidth() int {
 	cols := s.table.Columns()
 	total := tableBorderSize
 	for _, c := range cols {
