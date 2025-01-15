@@ -10,9 +10,9 @@ type Storage struct {
 	// UserRepository предоставляет доступ к функциям и операциям, связанным с пользователями.
 	// Этот репозиторий используется для выполнения таких задач, как аутентификация пользователей,
 	// регистрация новых пользователей и управление пользовательскими профилями.
-	UserRepository *repository.UserRepository
+	UserRepository repository.IUserRepository
 	// SecretRepository предоставляет доступ к функциям и операциям, связанным с секретами пользователя.
 	// Этот репозиторий используется для управления секретными данными, такими как пароли,
 	// банковские карты и другие конфиденциальные материалы.
-	SecretRepository *repository.SecretRepository
+	SecretRepository repository.ISecretRepository
 }

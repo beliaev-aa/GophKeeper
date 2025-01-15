@@ -21,12 +21,12 @@ type ISecretService interface {
 
 // SecretService предоставляет методы для управления секретами в хранилище.
 type SecretService struct {
-	secretRepository *repository.SecretRepository // secretRepository является репозиторием для доступа к секретам в базе данных.
+	secretRepository repository.ISecretRepository // secretRepository является репозиторием для доступа к секретам в базе данных.
 }
 
 // NewSecretService создает новый экземпляр SecretService.
 // Принимает в качестве аргумента репозиторий секретов и возвращает ссылку на сервис.
-func NewSecretService(secretRepository *repository.SecretRepository) ISecretService {
+func NewSecretService(secretRepository repository.ISecretRepository) ISecretService {
 	return &SecretService{secretRepository: secretRepository}
 }
 

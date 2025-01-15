@@ -18,11 +18,11 @@ var ErrBadCredentials = errors.New("bad auth credentials")
 
 // UserService предоставляет методы для регистрации и аутентификации пользователей.
 type UserService struct {
-	userRepository *repository.UserRepository // userRepository представляет репозиторий для работы с пользователями.
+	userRepository repository.IUserRepository // userRepository представляет репозиторий для работы с пользователями.
 }
 
 // NewUserService создает новый экземпляр UserService с использованием заданного репозитория пользователей.
-func NewUserService(userRepository *repository.UserRepository) *UserService {
+func NewUserService(userRepository repository.IUserRepository) *UserService {
 	return &UserService{userRepository: userRepository}
 }
 

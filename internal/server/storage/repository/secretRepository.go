@@ -11,6 +11,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ISecretRepository определяет интерфейс для репозитория секретов,
+// предоставляющего методы для работы с секретами в базе данных.
+type ISecretRepository interface {
+	GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error)
+	GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error)
+	Create(ctx context.Context, secret *models.Secret) (uint64, error)
+	Update(ctx context.Context, secret *models.Secret) error
+	Delete(ctx context.Context, secretID uint64, userID uint64) error
+}
+
 // SecretRepository обеспечивает методы для работы с данными секретов в базе данных.
 type SecretRepository struct {
 	db *sqlx.DB
@@ -18,7 +28,7 @@ type SecretRepository struct {
 
 // NewSecretRepository создаёт новый экземпляр SecretRepository.
 // Принимает подключение к базе данных sqlx.DB и возвращает указатель на SecretRepository.
-func NewSecretRepository(db *sqlx.DB) *SecretRepository {
+func NewSecretRepository(db *sqlx.DB) ISecretRepository {
 	return &SecretRepository{
 		db: db,
 	}
@@ -26,7 +36,7 @@ func NewSecretRepository(db *sqlx.DB) *SecretRepository {
 
 // GetSecret извлекает секрет по его ID и ID пользователя.
 // Возвращает указатель на модель Secret или ошибку, если секрет не найден или возникла другая ошибка.
-func (r SecretRepository) GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error) {
+func (r *SecretRepository) GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error) {
 	var secret models.Secret
 
 	query := `SELECT * FROM secrets WHERE id = $1 AND user_id = $2`
@@ -41,7 +51,7 @@ func (r SecretRepository) GetSecret(ctx context.Context, secretID uint64, userID
 
 // GetUserSecrets извлекает все секреты пользователя по его ID.
 // Возвращает срез секретов или ошибку.
-func (r SecretRepository) GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error) {
+func (r *SecretRepository) GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error) {
 	var secrets models.Secrets
 
 	query := "SELECT * FROM secrets WHERE user_id = $1 ORDER BY updated_at DESC"
@@ -56,7 +66,7 @@ func (r SecretRepository) GetUserSecrets(ctx context.Context, userID uint64) (mo
 // Create добавляет новый секрет в базу данных.
 // Принимает контекст и указатель на модель Secret.
 // Возвращает ID нового секрета или ошибку.
-func (r SecretRepository) Create(ctx context.Context, secret *models.Secret) (uint64, error) {
+func (r *SecretRepository) Create(ctx context.Context, secret *models.Secret) (uint64, error) {
 	var newSecretID uint64
 
 	query := `INSERT INTO secrets (user_id, title, metadata, secret_type, payload)
@@ -75,7 +85,7 @@ func (r SecretRepository) Create(ctx context.Context, secret *models.Secret) (ui
 // Update обновляет данные секрета в базе данных.
 // Принимает контекст и указатель на модель Secret.
 // Возвращает ошибку, если обновление не удалось.
-func (r SecretRepository) Update(ctx context.Context, secret *models.Secret) error {
+func (r *SecretRepository) Update(ctx context.Context, secret *models.Secret) error {
 	return runInTx(r.db, func(tx *sqlx.Tx) error {
 		err := tx.QueryRowxContext(ctx, "SELECT 1 FROM secrets WHERE id = $1 FOR UPDATE", secret.ID).Scan(new(int))
 		if err != nil {
@@ -102,7 +112,7 @@ func (r SecretRepository) Update(ctx context.Context, secret *models.Secret) err
 // Delete удаляет секрет из базы данных по его ID и ID пользователя.
 // Принимает контекст, ID секрета и ID пользователя.
 // Возвращает ошибку, если удаление не удалось.
-func (r SecretRepository) Delete(ctx context.Context, secretID uint64, userID uint64) error {
+func (r *SecretRepository) Delete(ctx context.Context, secretID uint64, userID uint64) error {
 	query := `DELETE FROM secrets WHERE id = $1 AND user_id = $2`
 	_, err := r.db.ExecContext(ctx, query, secretID, userID)
 
