@@ -2,6 +2,7 @@ package main
 
 import (
 	"beliaev-aa/GophKeeper/internal/client/config"
+	"beliaev-aa/GophKeeper/internal/client/grpc"
 	"beliaev-aa/GophKeeper/internal/client/tui/app"
 	"beliaev-aa/GophKeeper/pkg/utils"
 	"go.uber.org/zap"
@@ -28,6 +29,12 @@ func main() {
 	if err != nil {
 		logger.Fatal("Error initializing model", zap.Error(err))
 	}
-	tuiApp := app.NewTuiApplication(cfg, logger)
+
+	grpcClient, err := grpc.NewClientGRPC(cfg)
+	if err != nil {
+		logger.Fatal("Error initializing gRPC-client", zap.Error(err))
+	}
+
+	tuiApp := app.NewTuiApplication(grpcClient, cfg, logger)
 	tuiApp.Start()
 }
