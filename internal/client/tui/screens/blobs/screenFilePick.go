@@ -21,7 +21,7 @@ type FilePickScreen struct {
 	callback   tui.NavigationCallback
 }
 
-func (s FilePickScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *FilePickScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewFilePickScreen(msg.Secret, msg.Storage, msg.Callback), nil
 }
 
@@ -46,7 +46,7 @@ func NewFilePickScreen(secret *models.Secret, store storage.Storage, callback tu
 	return &m
 }
 
-func (s FilePickScreen) Init() tea.Cmd {
+func (s *FilePickScreen) Init() tea.Cmd {
 	return s.filePicker.Init()
 }
 
@@ -77,7 +77,7 @@ func (s *FilePickScreen) Update(msg tea.Msg) tea.Cmd {
 	return tea.Batch(commands...)
 }
 
-func (s FilePickScreen) View() string {
+func (s *FilePickScreen) View() string {
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("%20s%s:\n", "", s.filePicker.CurrentDirectory))

@@ -24,7 +24,7 @@ func (m RemoteOpenScreenMaker) Make(_ tui.NavigationMsg, _, _ int) (tui.TeaLike,
 }
 
 // Make создает новый экран RemoteOpenScreen, используя переданное сообщение навигации.
-func (s RemoteOpenScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *RemoteOpenScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewRemoteOpenScreen(msg.Client), nil
 }
 
@@ -37,7 +37,7 @@ func NewRemoteOpenScreen(client *grpc.ClientGRPC) *RemoteOpenScreen {
 
 // Init инициализирует экран и определяет начальное поведение в зависимости от того,
 // аутентифицирован ли пользователь.
-func (s RemoteOpenScreen) Init() tea.Cmd {
+func (s *RemoteOpenScreen) Init() tea.Cmd {
 	var commands []tea.Cmd
 
 	if len(s.client.GetToken()) > 0 {
@@ -61,6 +61,6 @@ func (s *RemoteOpenScreen) Update(_ tea.Msg) tea.Cmd {
 
 // View возвращает визуальное представление экрана. Поскольку экран не имеет визуального контента,
 // функция возвращает пустую строку.
-func (s RemoteOpenScreen) View() string {
+func (s *RemoteOpenScreen) View() string {
 	return ""
 }

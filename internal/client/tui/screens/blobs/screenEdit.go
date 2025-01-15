@@ -36,7 +36,7 @@ type inputOpts struct {
 }
 
 // Make создаёт новый экран BlobEditScreen на основе переданных параметров.
-func (s BlobEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *BlobEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewBlobEditScreen(msg.Secret, msg.Storage), nil
 }
 
@@ -91,7 +91,7 @@ func NewBlobEditScreen(secret *models.Secret, store storage.Storage) *BlobEditSc
 }
 
 // Init инициализирует компоненты экрана.
-func (s BlobEditScreen) Init() tea.Cmd {
+func (s *BlobEditScreen) Init() tea.Cmd {
 	return s.inputGroup.Init()
 }
 
@@ -111,12 +111,12 @@ func (s *BlobEditScreen) Update(msg tea.Msg) tea.Cmd {
 }
 
 // View отображает текущее состояние экрана в виде строки.
-func (s BlobEditScreen) View() string {
+func (s *BlobEditScreen) View() string {
 	return screens.RenderContent("Fill in file details:", s.inputGroup.View())
 }
 
 // Проверяет валидность введенных данных.
-func (s BlobEditScreen) validateInputs() error {
+func (s *BlobEditScreen) validateInputs() error {
 	title := s.inputGroup.Inputs[blobTitle].Value()
 	metadata := s.inputGroup.Inputs[blobMetadata].Value()
 

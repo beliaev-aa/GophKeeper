@@ -41,7 +41,7 @@ type inputOpts struct {
 }
 
 // Make создаёт новый экран CardEditScreen на основе переданных параметров.
-func (s CardEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *CardEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewCardEditScreen(msg.Secret, msg.Storage), nil
 }
 
@@ -89,7 +89,7 @@ func NewCardEditScreen(secret *models.Secret, store storage.Storage) *CardEditSc
 }
 
 // Init инициализирует компоненты экрана.
-func (s CardEditScreen) Init() tea.Cmd {
+func (s *CardEditScreen) Init() tea.Cmd {
 	return s.inputGroup.Init()
 }
 
@@ -171,7 +171,7 @@ func (s *CardEditScreen) Submit() error {
 }
 
 // View отображает текущее состояние экрана в виде строки.
-func (s CardEditScreen) View() string {
+func (s *CardEditScreen) View() string {
 	return screens.RenderContent("Fill in card details:", s.inputGroup.View())
 }
 

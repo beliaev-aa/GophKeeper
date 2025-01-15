@@ -30,7 +30,7 @@ type SecretTypeScreen struct {
 }
 
 // Make создает экземпляр SecretTypeScreen на основе переданного сообщения.
-func (s SecretTypeScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *SecretTypeScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewSecretTypeScreen(msg.Storage), nil
 }
 
@@ -71,7 +71,7 @@ func (s *SecretTypeScreen) prepareSecretListModel() {
 }
 
 // Init инициализирует экран выбора типа секрета.
-func (s SecretTypeScreen) Init() tea.Cmd {
+func (s *SecretTypeScreen) Init() tea.Cmd {
 	return tea.SetWindowTitle("GophKeeper client")
 }
 

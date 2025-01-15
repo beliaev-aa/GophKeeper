@@ -36,7 +36,7 @@ type inputOpts struct {
 }
 
 // Make создаёт новый экран CredentialEditScreen на основе переданных параметров.
-func (s CredentialEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *CredentialEditScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewCredentialEditScreen(msg.Secret, msg.Storage), nil
 }
 
@@ -78,7 +78,7 @@ func NewCredentialEditScreen(secret *models.Secret, store storage.Storage) *Cred
 }
 
 // Init инициализирует компоненты экрана.
-func (s CredentialEditScreen) Init() tea.Cmd {
+func (s *CredentialEditScreen) Init() tea.Cmd {
 	return s.inputGroup.Init()
 }
 
@@ -140,7 +140,7 @@ func (s *CredentialEditScreen) Submit() error {
 }
 
 // View отображает текущее состояние экрана в виде строки.
-func (s CredentialEditScreen) View() string {
+func (s *CredentialEditScreen) View() string {
 	return screens.RenderContent("Fill in credential details:", s.inputGroup.View())
 }
 

@@ -41,7 +41,7 @@ type inputOpts struct {
 }
 
 // Make создаёт новый экран AuthenticateScreen на основе переданного клиента.
-func (s AuthenticateScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
+func (s *AuthenticateScreen) Make(msg tui.NavigationMsg, _, _ int) (tui.TeaLike, error) {
 	return NewLoginScreen(msg.Client), nil
 }
 
@@ -70,7 +70,7 @@ func NewLoginScreen(client *grpc.ClientGRPC) *AuthenticateScreen {
 }
 
 // Init инициализирует компоненты экрана.
-func (s AuthenticateScreen) Init() tea.Cmd {
+func (s *AuthenticateScreen) Init() tea.Cmd {
 	return s.inputGroup.Init()
 }
 
@@ -134,7 +134,7 @@ func (s *AuthenticateScreen) Submit(mode Mode) tea.Cmd {
 }
 
 // View отображает текущее состояние экрана в виде строки.
-func (s AuthenticateScreen) View() string {
+func (s *AuthenticateScreen) View() string {
 	return screens.RenderContent("Fill in credentials:", s.inputGroup.View())
 }
 
