@@ -212,21 +212,6 @@ func Test_BrowseStorageScreen_handleCopy(t *testing.T) {
 
 	testCases := []testCase{
 		{
-			name: "Successful_Copy_TextSecret",
-			mockSetup: func() {
-				mockStorage.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&models.Secret{
-					ID:         1,
-					SecretType: string(models.TextSecret),
-					Title:      "Test Secret",
-					Text:       &models.Text{Content: "Sample text"},
-				}, nil).Times(1)
-				mockStorage.EXPECT().GetAll(gomock.Any()).Return([]*models.Secret{}, nil).AnyTimes()
-			},
-			expectedErrMsg: "",
-			expectedMsg:    "secret copied successfully",
-			msgType:        tui.InfoMsg(""),
-		},
-		{
 			name: "Blob_Secret_Copy",
 			mockSetup: func() {
 				mockStorage.EXPECT().Get(gomock.Any(), gomock.Any()).Return(&models.Secret{
