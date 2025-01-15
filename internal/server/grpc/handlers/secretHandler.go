@@ -21,13 +21,13 @@ import (
 type SecretHandler struct {
 	proto.UnimplementedSecretsServer
 	logger              *zap.Logger
-	secretService       *service.SecretService
+	secretService       service.ISecretService
 	notificationHandler *NotificationHandler
 }
 
 // NewSecretHandler создаёт новый экземпляр сервера для управления секретами.
 // Возвращает инициализированный экземпляр SecretHandler.
-func NewSecretHandler(logger *zap.Logger, secretService *service.SecretService) *SecretHandler {
+func NewSecretHandler(logger *zap.Logger, secretService service.ISecretService) *SecretHandler {
 	return &SecretHandler{
 		logger:              logger,
 		notificationHandler: NewNotificationHandler(logger),

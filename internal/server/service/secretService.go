@@ -10,6 +10,15 @@ import (
 	"fmt"
 )
 
+// ISecretService интерфейс для сервиса управления секретами в хранилище.
+type ISecretService interface {
+	GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error)
+	GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error)
+	CreateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error)
+	UpdateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error)
+	DeleteSecret(ctx context.Context, secretID uint64, userID uint64) error
+}
+
 // SecretService предоставляет методы для управления секретами в хранилище.
 type SecretService struct {
 	secretRepository *repository.SecretRepository // secretRepository является репозиторием для доступа к секретам в базе данных.
@@ -17,7 +26,7 @@ type SecretService struct {
 
 // NewSecretService создает новый экземпляр SecretService.
 // Принимает в качестве аргумента репозиторий секретов и возвращает ссылку на сервис.
-func NewSecretService(secretRepository *repository.SecretRepository) *SecretService {
+func NewSecretService(secretRepository *repository.SecretRepository) ISecretService {
 	return &SecretService{secretRepository: secretRepository}
 }
 
