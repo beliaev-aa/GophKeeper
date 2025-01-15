@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"beliaev-aa/GophKeeper/internal/client/config"
 	"beliaev-aa/GophKeeper/pkg/models"
 	"beliaev-aa/GophKeeper/pkg/proto"
 	"beliaev-aa/GophKeeper/tests/mocks"
@@ -17,6 +18,25 @@ import (
 	"testing"
 	"time"
 )
+
+func TestNewClientGRPC(t *testing.T) {
+	cfg := &config.Config{
+		ServerAddress: "localhost:50051",
+	}
+
+	client, err := NewClientGRPC(cfg)
+	if err != nil {
+		t.Fatalf("Failed to create gRPC client: %v", err)
+	}
+
+	if client == nil {
+		t.Fatal("Expected non-nil client, but got nil")
+	}
+
+	if token := client.GetToken(); token != "" {
+		t.Errorf("Expected initial token to be empty, got %s", token)
+	}
+}
 
 func TestClientGRPC_Login(t *testing.T) {
 	ctrl := gomock.NewController(t)
