@@ -32,8 +32,8 @@ type (
 	// ClientGRPC управляет соединением с gRPC сервером и реализует методы для работы с серверными ресурсами.
 	ClientGRPC struct {
 		config        *config.Config
-		usersClient   proto.UsersClient
-		secretsClient proto.SecretsClient
+		UsersClient   proto.UsersClient
+		SecretsClient proto.SecretsClient
 		notifyClient  proto.NotificationClient
 		accessToken   string
 		password      string
@@ -78,8 +78,8 @@ func NewClientGRPC(cfg *config.Config) (*ClientGRPC, error) {
 		return nil, fmt.Errorf("failed to create gRPC client: %w", err)
 	}
 
-	newClient.usersClient = proto.NewUsersClient(c)
-	newClient.secretsClient = proto.NewSecretsClient(c)
+	newClient.UsersClient = proto.NewUsersClient(c)
+	newClient.SecretsClient = proto.NewSecretsClient(c)
 	newClient.notifyClient = proto.NewNotificationClient(c)
 
 	return &newClient, nil
@@ -92,7 +92,7 @@ func (c *ClientGRPC) Login(ctx context.Context, login string, password string) (
 		Password: password,
 	}
 
-	response, err := c.usersClient.Login(ctx, req)
+	response, err := c.UsersClient.Login(ctx, req)
 	if err != nil {
 		return "", parseError(err)
 	}
@@ -109,7 +109,7 @@ func (c *ClientGRPC) Register(ctx context.Context, login string, password string
 		Password: password,
 	}
 
-	response, err := c.usersClient.Register(ctx, req)
+	response, err := c.UsersClient.Register(ctx, req)
 	if err != nil {
 		return "", parseError(err)
 	}
@@ -123,7 +123,7 @@ func (c *ClientGRPC) Register(ctx context.Context, login string, password string
 func (c *ClientGRPC) LoadSecrets(ctx context.Context) ([]*models.Secret, error) {
 	request := emptypb.Empty{}
 
-	response, err := c.secretsClient.GetUserSecrets(ctx, &request)
+	response, err := c.SecretsClient.GetUserSecrets(ctx, &request)
 	if err != nil {
 		return nil, parseError(err)
 	}
@@ -138,7 +138,7 @@ func (c *ClientGRPC) LoadSecret(_ context.Context, ID uint64) (*models.Secret, e
 		Id: ID,
 	}
 
-	response, err := c.secretsClient.GetUserSecret(context.Background(), request)
+	response, err := c.SecretsClient.GetUserSecret(context.Background(), request)
 	if err != nil {
 		return nil, parseError(err)
 	}
@@ -164,7 +164,7 @@ func (c *ClientGRPC) SaveSecret(ctx context.Context, secret *models.Secret) erro
 	}
 
 	request := &proto.SaveUserSecretRequest{Secret: sec}
-	_, err := c.secretsClient.SaveUserSecret(ctx, request)
+	_, err := c.SecretsClient.SaveUserSecret(ctx, request)
 
 	return parseError(err)
 }
@@ -172,7 +172,7 @@ func (c *ClientGRPC) SaveSecret(ctx context.Context, secret *models.Secret) erro
 // DeleteSecret удаляет секрет пользователя.
 func (c *ClientGRPC) DeleteSecret(ctx context.Context, id uint64) error {
 	request := &proto.DeleteUserSecretRequest{Id: id}
-	_, err := c.secretsClient.DeleteUserSecret(ctx, request)
+	_, err := c.SecretsClient.DeleteUserSecret(ctx, request)
 
 	return parseError(err)
 }

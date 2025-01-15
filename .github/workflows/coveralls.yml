@@ -30,7 +30,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           go test -tags=test -v -coverprofile=coverage.out ./...
-          grep -v "cmd/" coverage.out | grep -v "pkg/proto" > filtered_coverage.out
+          grep -v "cmd/" coverage.out | grep -v "pkg/proto" | grep -v "tests/mocks" > filtered_coverage.out
 
       - name: Upload coverage to Coveralls
         run: |
