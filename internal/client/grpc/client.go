@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/charmbracelet/bubbletea"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -197,18 +198,28 @@ func (c *ClientGRPC) GetPassword() string {
 }
 
 // Notifications подписывается на уведомления сервера и обновляет UI при получении новых данных.
-func (c *ClientGRPC) Notifications(p *tea.Program) {
+func (c *ClientGRPC) Notifications(p *tea.Program, logger *zap.Logger) {
 	var (
-		stream proto.Notification_SubscribeClient
-		err    error
+		err        error
+		maxRetries = 5
+		retryCount int
+		stream     proto.Notification_SubscribeClient
 	)
 
 	for {
 		if stream == nil {
 			if stream, err = c.subscribe(); err != nil {
-				time.Sleep(time.Second * 2)
-				continue
+				if retryCount < maxRetries {
+					waitTime := time.Duration(math.Pow(2, float64(retryCount))) * time.Second
+					time.Sleep(waitTime)
+					retryCount++
+					continue
+				} else {
+					logger.Info("failed to subscribe to notification stream")
+					break
+				}
 			}
+			retryCount = 0
 		}
 
 		_, err = stream.Recv()

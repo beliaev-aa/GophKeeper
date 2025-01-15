@@ -51,7 +51,7 @@ func NewTuiApplication(config *config.Config, logger *zap.Logger) *TuiApplicatio
 func (a *TuiApplication) Start() {
 	ErrExitCmd := errors.New("exit command")
 
-	go a.client.Notifications(a.program)
+	go a.client.Notifications(a.program, a.logger)
 	go func() {
 		_, err := a.program.Run()
 		if err != nil {
