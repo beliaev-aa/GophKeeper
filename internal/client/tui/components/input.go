@@ -103,7 +103,7 @@ func (m InputGroup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // updateInputs обновляет поля ввода, обрабатывая сообщения.
-func (m *InputGroup) updateInputs(msg tea.Msg) tea.Cmd {
+func (m InputGroup) updateInputs(msg tea.Msg) tea.Cmd {
 	commands := make([]tea.Cmd, len(m.Inputs))
 
 	for i := range m.Inputs {
