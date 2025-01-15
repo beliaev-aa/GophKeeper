@@ -52,14 +52,19 @@ func (s *SecretHandler) SaveUserSecret(ctx context.Context, in *proto.SaveUserSe
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	clientID, err := extractClientID(ctx)
-	if err == nil {
-		isUpdated := secret.ID > 0
-		err = s.notificationHandler.notifyClients(userID, clientID, secret.ID, isUpdated)
-		if err != nil {
-			s.logger.Error("failed to notify clients", zap.Error(err))
-		}
+	var clientID uint64
+	clientID, err = extractClientID(ctx)
+	if err != nil {
+		s.logger.Error("failed to extract client ID", zap.Error(err))
+		return &emptypb.Empty{}, err
 	}
+
+	isUpdated := secret.ID > 0
+	err = s.notificationHandler.notifyClients(userID, clientID, secret.ID, isUpdated)
+	if err != nil {
+		s.logger.Error("failed to notify clients", zap.Error(err))
+	}
+
 	return &emptypb.Empty{}, nil
 }
 
