@@ -27,17 +27,21 @@ import (
 	"time"
 )
 
-// ClientGRPC управляет соединением с gRPC сервером и реализует методы для работы с серверными ресурсами.
-type ClientGRPC struct {
-	config        *config.Config
-	usersClient   proto.UsersClient
-	secretsClient proto.SecretsClient
-	notifyClient  proto.NotificationClient
-	accessToken   string
-	password      string
-	clientID      uint64
-	previews      sync.Map
-}
+type (
+	// ClientGRPC управляет соединением с gRPC сервером и реализует методы для работы с серверными ресурсами.
+	ClientGRPC struct {
+		config        *config.Config
+		usersClient   proto.UsersClient
+		secretsClient proto.SecretsClient
+		notifyClient  proto.NotificationClient
+		accessToken   string
+		password      string
+		clientID      uint64
+		previews      sync.Map
+	}
+	// ReloadSecretList метка для обработчика
+	ReloadSecretList struct{}
+)
 
 // NewClientGRPC создаёт новый экземпляр ClientGRPC с предварительной настройкой подключения к серверу.
 func NewClientGRPC(cfg *config.Config) (*ClientGRPC, error) {
@@ -192,26 +196,31 @@ func (c *ClientGRPC) GetPassword() string {
 	return c.password
 }
 
-// parseError анализирует ошибки от gRPC вызовов и конвертирует их в более понятный формат.
-func parseError(err error) error {
-	if err == nil {
-		return nil
-	}
+// Notifications подписывается на уведомления сервера и обновляет UI при получении новых данных.
+func (c *ClientGRPC) Notifications(p *tea.Program) {
+	var (
+		stream proto.Notification_SubscribeClient
+		err    error
+	)
 
-	st, ok := status.FromError(err)
-	if !ok {
-		return err
-	}
+	for {
+		if stream == nil {
+			if stream, err = c.subscribe(); err != nil {
+				time.Sleep(time.Second * 2)
+				continue
+			}
+		}
 
-	switch st.Code() {
-	case codes.Unavailable:
-		return errors.New("server unavailable")
-	case codes.Unauthenticated:
-		return errors.New("failed to authenticate")
-	case codes.AlreadyExists:
-		return errors.New("user already exists")
-	default:
-		return err
+		_, err = stream.Recv()
+		if err != nil {
+			stream = nil
+			time.Sleep(time.Second * 2)
+			continue
+		}
+
+		if p != nil {
+			p.Send(ReloadSecretList{})
+		}
 	}
 }
 
@@ -250,35 +259,28 @@ func loadTLSConfig(caCertFile, clientCertFile, clientKeyFile string) (credential
 	return credentials.NewTLS(tlcConfiguration), nil
 }
 
-// Notifications подписывается на уведомления сервера и обновляет UI при получении новых данных.
-func (c *ClientGRPC) Notifications(p *tea.Program) {
-	var (
-		stream proto.Notification_SubscribeClient
-		err    error
-	)
+// parseError анализирует ошибки от gRPC вызовов и конвертирует их в более понятный формат.
+func parseError(err error) error {
+	if err == nil {
+		return nil
+	}
 
-	for {
-		if stream == nil {
-			if stream, err = c.subscribe(); err != nil {
-				time.Sleep(time.Second * 2)
-				continue
-			}
-		}
+	st, ok := status.FromError(err)
+	if !ok {
+		return err
+	}
 
-		_, err = stream.Recv()
-		if err != nil {
-			stream = nil
-			time.Sleep(time.Second * 2)
-			continue
-		}
-
-		if p != nil {
-			p.Send(ReloadSecretList{})
-		}
+	switch st.Code() {
+	case codes.Unavailable:
+		return errors.New("server unavailable")
+	case codes.Unauthenticated:
+		return errors.New("failed to authenticate")
+	case codes.AlreadyExists:
+		return errors.New("user already exists")
+	default:
+		return err
 	}
 }
-
-type ReloadSecretList struct{}
 
 // Инициирует подписку на серверные уведомления, используя ID клиента.
 func (c *ClientGRPC) subscribe() (proto.Notification_SubscribeClient, error) {
