@@ -113,11 +113,10 @@ func (store *RemoteStorage) encryptPayload(secret *models.Secret) (err error) {
 	encryptedData, err := crypto.Encrypt(string(data), store.deriveKey)
 	if err != nil {
 		return fmt.Errorf("encryptPayload(): error encrypting Data: %w", err)
-	} else {
-		secret.Payload = []byte(encryptedData)
 	}
 
-	return err
+	secret.Payload = []byte(encryptedData)
+	return nil
 }
 
 // decryptPayload расшифровывает данные секрета после извлечения.
