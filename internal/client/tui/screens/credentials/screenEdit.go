@@ -55,12 +55,10 @@ func NewCredentialEditScreen(secret *models.Secret, store storage.Storage) *Cred
 
 	var buttons []components.Button
 	buttons = append(buttons, components.Button{Title: "[ Submit ]", Cmd: func() tea.Cmd {
-		err := m.Submit()
-		if err != nil {
+		if err := m.Submit(); err != nil {
 			return tui.ReportError(err)
-		} else {
-			return tui.SetBodyPane(tui.StorageBrowseScreen, tui.WithStorage(m.storage))
 		}
+		return tui.SetBodyPane(tui.StorageBrowseScreen, tui.WithStorage(m.storage))
 	}})
 
 	buttons = append(buttons, components.Button{Title: "[ Back ]", Cmd: func() tea.Cmd {
