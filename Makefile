@@ -1,4 +1,4 @@
-.PHONY: test coverage coverage-html proto certs server client build
+.PHONY: test coverage coverage-html proto certs server client build help
 
 PROTO_SRC = proto
 PROTO_FILES = notification secrets users
@@ -14,16 +14,20 @@ PLATFORMS = \
     linux/amd64 \
     windows/amd64
 
-test:
+help: ## Display help screen
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+.PHONY: help
+
+test: ## Running tests with generation of coverage report
 	go test ./... -coverprofile=cover
 
-coverage: test
+coverage: test ## Generate test coverage report in text format
 	go tool cover -func=cover
 
-coverage-html: test
+coverage-html: test ## Generate test coverage report in HTML format
 	go tool cover -html=cover
 
-proto: $(PROTO_FILES)
+proto: $(PROTO_FILES) ## Generating code from protobuf files
 .PHONY: proto
 
 $(PROTO_FILES): %: $(PROTO_DST)/%
@@ -37,15 +41,15 @@ $(PROTO_DST)/%:
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_SRC)/$(notdir $@).proto
 
-certs:
+certs: ## Generating certificates for secure connection
 	cd certs && ./generate.sh > /dev/null
 .PHONY: certs
 
-server:
+server: ## Building a server application
 	go build -o builds/$@ cmd/$@/*.go
 .PHONY: server
 
-client:
+client: ## Building a client application for all platforms
 	go build \
 		-ldflags "\
 			-X 'main.buildVersion=$(BUILD_VERSION)' \
@@ -74,5 +78,5 @@ client:
 
 .PHONY: client
 
-build: client server
+build: client server ## Building client and server applications
 .PHONY: build
