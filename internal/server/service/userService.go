@@ -16,13 +16,22 @@ import (
 // ErrBadCredentials определяет ошибку, возникающую при неверных учетных данных для аутентификации.
 var ErrBadCredentials = errors.New("bad auth credentials")
 
+// IUserService определяет интерфейс для сервиса пользователей.
+type IUserService interface {
+	// RegisterUser регистрирует нового пользователя в системе.
+	RegisterUser(ctx context.Context, login string, password string) (*models.User, error)
+
+	// LoginUser аутентифицирует пользователя по логину и паролю.
+	LoginUser(ctx context.Context, login string, password string) (*models.User, error)
+}
+
 // UserService предоставляет методы для регистрации и аутентификации пользователей.
 type UserService struct {
 	userRepository repository.IUserRepository // userRepository представляет репозиторий для работы с пользователями.
 }
 
 // NewUserService создает новый экземпляр UserService с использованием заданного репозитория пользователей.
-func NewUserService(userRepository repository.IUserRepository) *UserService {
+func NewUserService(userRepository repository.IUserRepository) IUserService {
 	return &UserService{userRepository: userRepository}
 }
 

@@ -18,12 +18,12 @@ import (
 type UserHandler struct {
 	proto.UnimplementedUsersServer
 	config      *config.Config
-	userService *service.UserService
+	userService service.IUserService
 }
 
 // NewUserHandler создает новый экземпляр UserHandler.
 // Принимает конфигурацию сервера и сервис пользователя, возвращая инициализированный сервер пользователей.
-func NewUserHandler(config *config.Config, userService *service.UserService) *UserHandler {
+func NewUserHandler(config *config.Config, userService service.IUserService) *UserHandler {
 	return &UserHandler{
 		config:      config,
 		userService: userService,
