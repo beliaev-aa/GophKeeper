@@ -28,7 +28,7 @@ func NewUserService(userRepository *repository.UserRepository) *UserService {
 
 // RegisterUser регистрирует нового пользователя в системе.
 // Принимает контекст, логин и пароль. Возвращает зарегистрированного пользователя или ошибку.
-func (s UserService) RegisterUser(ctx context.Context, login string, password string) (*models.User, error) {
+func (s *UserService) RegisterUser(ctx context.Context, login string, password string) (*models.User, error) {
 	var newUser models.User
 
 	user, err := s.userRepository.GetUserByLogin(ctx, login)
@@ -57,7 +57,7 @@ func (s UserService) RegisterUser(ctx context.Context, login string, password st
 
 // LoginUser аутентифицирует пользователя по логину и паролю.
 // Возвращает пользователя или ошибку, если аутентификация не удалась.
-func (s UserService) LoginUser(ctx context.Context, login string, password string) (*models.User, error) {
+func (s *UserService) LoginUser(ctx context.Context, login string, password string) (*models.User, error) {
 	user, err := s.userRepository.GetUserByLogin(ctx, login)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrBadCredentials
@@ -72,7 +72,7 @@ func (s UserService) LoginUser(ctx context.Context, login string, password strin
 }
 
 // hashPassword хэширует пароль с использованием bcrypt.
-func (s UserService) hashPassword(password string) (string, error) {
+func (s *UserService) hashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -82,7 +82,7 @@ func (s UserService) hashPassword(password string) (string, error) {
 
 // comparePassword сравнивает хэшированный пароль и введенный пароль.
 // Возвращает true, если пароли совпадают.
-func (s UserService) comparePassword(hash, password string) bool {
+func (s *UserService) comparePassword(hash, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

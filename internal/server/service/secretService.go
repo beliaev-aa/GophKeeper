@@ -23,7 +23,7 @@ func NewSecretService(secretRepository *repository.SecretRepository) *SecretServ
 
 // GetSecret извлекает секрет по его ID и ID пользователя.
 // В случае отсутствия секрета возвращает ошибку.
-func (s SecretService) GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error) {
+func (s *SecretService) GetSecret(ctx context.Context, secretID uint64, userID uint64) (*models.Secret, error) {
 	secret, err := s.secretRepository.GetSecret(ctx, secretID, userID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("secret not found (id=%d)", secretID)
@@ -36,7 +36,7 @@ func (s SecretService) GetSecret(ctx context.Context, secretID uint64, userID ui
 
 // GetUserSecrets возвращает список всех секретов пользователя.
 // Если секреты не найдены, возвращает ошибку.
-func (s SecretService) GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error) {
+func (s *SecretService) GetUserSecrets(ctx context.Context, userID uint64) (models.Secrets, error) {
 	secrets, err := s.secretRepository.GetUserSecrets(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (s SecretService) GetUserSecrets(ctx context.Context, userID uint64) (model
 
 // CreateSecret создает новый секрет.
 // Возвращает созданный секрет или ошибку при неудаче.
-func (s SecretService) CreateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error) {
+func (s *SecretService) CreateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error) {
 	var err error
 	secret.ID, err = s.secretRepository.Create(ctx, secret)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s SecretService) CreateSecret(ctx context.Context, secret *models.Secret) 
 
 // UpdateSecret обновляет существующий секрет.
 // Возвращает обновленный секрет или ошибку, если секрет не найден или не удалось сохранить изменения.
-func (s SecretService) UpdateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error) {
+func (s *SecretService) UpdateSecret(ctx context.Context, secret *models.Secret) (*models.Secret, error) {
 	err := s.secretRepository.Update(ctx, secret)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("secret not found (id=%d)", secret.ID)
@@ -73,7 +73,7 @@ func (s SecretService) UpdateSecret(ctx context.Context, secret *models.Secret) 
 
 // DeleteSecret удаляет секрет по его ID и ID пользователя.
 // Возвращает ошибку, если удаление не произошло.
-func (s SecretService) DeleteSecret(ctx context.Context, secretID uint64, userID uint64) error {
+func (s *SecretService) DeleteSecret(ctx context.Context, secretID uint64, userID uint64) error {
 	err := s.secretRepository.Delete(ctx, secretID, userID)
 	return err
 }
