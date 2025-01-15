@@ -1,7 +1,6 @@
-package utils_test
+package utils
 
 import (
-	"beliaev-aa/GophKeeper/pkg/utils"
 	"go.uber.org/zap"
 	"testing"
 )
@@ -21,7 +20,8 @@ func TestNewLogger_returns_logger(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			logger := utils.NewLogger()
+			logger := NewLogger()
+			logger = AddLoggerFields(logger, "logger test")
 
 			if (logger == nil) != tc.wantNil {
 				t.Errorf("NewLogger() got = %v, wantNil = %v", logger, tc.wantNil)
