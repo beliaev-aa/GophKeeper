@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: go mod tidy
 
+      - name: Generate certs
+        run: make cert
+
       - name: Run tests with coverage
         run: go test -tags=test -v -coverprofile=coverage.out ./...
 
