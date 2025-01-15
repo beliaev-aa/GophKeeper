@@ -80,11 +80,8 @@ func (s *Server) Start() error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	select {
-	case sig := <-quit:
-		s.logger.Info("Interrupt signal received", zap.String("signal", sig.String()))
-	}
-
+	sig := <-quit
+	s.logger.Info("Interrupt signal received", zap.String("signal", sig.String()))
 	s.shutdown()
 
 	return nil
