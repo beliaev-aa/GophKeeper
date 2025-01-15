@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/github/beliaev-aa/GophKeeper/badge.svg?branch=master)](https://coveralls.io/github/beliaev-aa/GophKeeper?branch=master)
 # GophKeeper
 
 GophKeeper — это приложение для управления секретами, которое позволяет пользователям безопасно хранить и управлять

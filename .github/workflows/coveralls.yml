@@ -28,7 +28,9 @@ jobs:
         run: make certs
 
       - name: Run tests with coverage
-        run: go test -tags=test -v -coverprofile=coverage.out ./...
+        run: |
+          go test -tags=test -v -coverprofile=coverage.out ./...
+          grep -v "cmd/" coverage.out | grep -v "pkg/proto" > filtered_coverage.out
 
       - name: Upload coverage to Coveralls
         run: |
