@@ -71,10 +71,10 @@ func (s *SecretHandler) GetUserSecret(ctx context.Context, in *proto.GetUserSecr
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	secret, err := s.secretService.GetSecret(ctx, in.Id, userID)
-	if errors.Is(err, fmt.Errorf("secret not found (id=%d)", in.Id)) {
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
 	if err != nil {
+		if errors.Is(err, fmt.Errorf("secret not found (id=%d)", in.Id)) {
+			return nil, status.Error(codes.NotFound, err.Error())
+		}
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &proto.GetUserSecretResponse{Secret: converter.SecretToProto(secret)}, nil
