@@ -44,6 +44,9 @@ var ErrCiphertextTooShort = errors.New("ciphertext too short")
 
 // DeriveKey - Генерация ключа из мастер-пароля и соли
 func DeriveKey(password, salt string) ([]byte, error) {
+	if password == "" {
+		return []byte(password), errors.New("empty password")
+	}
 	return scrypt.Key([]byte(password), []byte(salt), 32768, 8, 1, 32)
 }
 

@@ -27,7 +27,7 @@ func TestDeriveKey(t *testing.T) {
 			password:   "",
 			salt:       "salt",
 			wantKeyLen: 32,
-			wantErr:    false,
+			wantErr:    true,
 		},
 		{
 			name:       "empty_salt",
